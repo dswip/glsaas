@@ -192,7 +192,7 @@ class Custom_Model extends CI_Model {
         $this->db->where('id', $uid);
         $this->db->update($this->tableName, $val);
         
-        $this->logs->insert($this->session->userdata('userid'), date('Y-m-d'), waktuindo(), 'update', $this->com);
+//        $this->logs->insert($this->session->userdata('userid'), date('Y-m-d'), waktuindo(), 'update', $this->com);
     }
     
     function delete($uid)
@@ -201,7 +201,7 @@ class Custom_Model extends CI_Model {
         $this->db->where('id', $uid);
         $this->db->update($this->tableName, $val);
         
-        $this->logs->insert($this->session->userdata('userid'), date('Y-m-d'), waktuindo(), 'delete', $this->com);
+//        $this->logs->insert($this->session->userdata('userid'), date('Y-m-d'), waktuindo(), 'delete', $this->com);
     }
     
     function force_delete($uid)
@@ -215,7 +215,7 @@ class Custom_Model extends CI_Model {
     function add($users)
     {
         $this->db->insert($this->tableName, $users);
-        $this->logs->insert($this->session->userdata('userid'), date('Y-m-d'), waktuindo(), 'create', $this->com);
+//        $this->logs->insert($this->session->userdata('userid'), date('Y-m-d'), waktuindo(), 'create', $this->com);
     }
     
     function get_by_id($uid)
