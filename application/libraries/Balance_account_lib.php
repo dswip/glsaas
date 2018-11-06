@@ -31,7 +31,7 @@ class Balance_account_lib extends Custom_Model {
        $this->db->where('account_id', $acc);
        $this->db->where('month', $month);
        $this->db->where('year', $year);
-       $this->db->update($this->tableName, $trans); 
+       return $this->db->update($this->tableName, $trans); 
     }
     
     function fill($member,$acc,$month,$year,$begin=0,$end=0)
@@ -45,7 +45,7 @@ class Balance_account_lib extends Custom_Model {
        if ($num == 0)
        {
           $trans = array('member_id' => $member, 'account_id' => $acc, 'month' => $month, 'year' => $year, 'beginning' => $begin, 'end' => $end);
-          $this->db->insert($this->tableName, $trans); 
+          return $this->db->insert($this->tableName, $trans); 
        }
     }
     
@@ -77,7 +77,7 @@ class Balance_account_lib extends Custom_Model {
        $this->db->where('account_id', $acc);
        $this->db->where('month', $month);
        $this->db->where('year', $year);
-       $this->db->update($this->tableName, $trans); 
+       return $this->db->update($this->tableName, $trans); 
     }
     
     function fill_vamount($member,$acc,$month,$year,$amt=0)
@@ -91,7 +91,7 @@ class Balance_account_lib extends Custom_Model {
        if ($num == 0)
        {
           $trans = array('member_id' => $member, 'account_id' => $acc, 'month' => $month, 'year' => $year, 'vamount' => $amt);
-          $this->db->insert($this->tableName, $trans); 
+          return $this->db->insert($this->tableName, $trans); 
        }
     }
     
@@ -99,7 +99,7 @@ class Balance_account_lib extends Custom_Model {
     {
        $this->db->where('member_id',$member);
        $this->db->where('account_id',$acc); 
-       $this->db->delete($this->tableName);
+       return $this->db->delete($this->tableName);
     }
     
     function get($member,$acc,$month,$year)

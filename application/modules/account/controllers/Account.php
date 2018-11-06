@@ -141,23 +141,22 @@ class Account extends MX_Controller
     function delete($uid)
     {
        try{
-          
-//            if ( $this->journal->valid_account_transaction($uid) == TRUE && $this->valid_default($uid) == TRUE )
-//            {
+            if ( $this->journal->valid_account_transaction($uid) == TRUE && $this->valid_default($uid) == TRUE )
+            {
                 // hapus balance
-//                $this->balance->remove_balance($uid);
-                $this->Model->delete($uid);
-                $this->api->response(array('status' => true, 'error' => 'successfully soft removed..!'));
-//            }
-//            else{ echo  "invalid|$this->title related to another component..!"; } 
+                if ($this->balance->remove_balance($this->account->get_member($uid),$uid) == TRUE){
+                   $this->Model->delete($uid);
+                   $this->api->response(array('status' => true, 'error' => 'successfully removed balance..!'));
+                }else{ $this->api->response(array('status' => false, 'error' => "Cant removed..!")); }
+            }
+            else{ echo  "invalid|$this->title related to another component..!"; } 
            
        }catch (\Exception $e){
          return $this->api->response(null,403);  
        }
-        
     }
     
-    private function valid_required($datax=null){
+    private function valid_required($datax=null,$type='add'){
         $error = null;
         if (!isset($datax['name'])){ $error = 'name'; }
         else if(!isset($datax['member'])){ $error = 'member'; }
@@ -174,6 +173,7 @@ class Account extends MX_Controller
         else if (!isset($datax['fax'])){ $error = 'fax'; }
         else if (!isset($datax['balance_phone'])){ $error = 'balance_phone'; }
         else if (!isset($datax['bank'])){ $error = 'bank'; }
+        else if (!isset($datax['id'])){ $error = 'id'; }
         if ($error != null){ $error = $error.' field required'; }
         return $error;
     }
@@ -204,48 +204,16 @@ class Account extends MX_Controller
                               'balance_phone' => $datax['balance_phone'], 'status' => 1, 'bank_stts' => $bank,
                               'created' => date('Y-m-d H:i:s'));
              
-             $this->Model->add($account);
-             $this->create_balance($datax['member'],$code);
+             if ($this->Model->add($account) == TRUE){ 
+                 $this->create_balance($datax['member'],$code); 
+                 $this->api->response(array('status' => true, 'error' => $this->title.' : '.$code.' successfully saved..!..!'));
+             } 
              
-         }else{ echo $errorfield.' - '.$error; }
-         
-//         elseif ($this->valid_code($code) == FALSE){ $error = 'This '.$this->title.' code is already registered!'; }
-//         elseif ($this->valid_name($datax['name']) == FALSE){ $error = 'This '.$this->title.' name is already registered!'; }
+         }else{ echo $errorfield.' - '.$error; }         
              
        }catch (\Exception $e){ return $this->api->response(null,403); }
         
     }
-
-//    function add_process()
-//    {
-//        if ($this->acl->otentikasi2($this->title,'ajax') == TRUE){
-//
-//	// Form validation
-//        $this->form_validation->set_rules('tname', 'Name', 'required|callback_valid_name');
-//        $this->form_validation->set_rules('tno', 'No', 'required|numeric');
-//        $this->form_validation->set_rules('tcode', 'Code', 'required|numeric|callback_valid_code');
-//        $this->form_validation->set_rules('ccurrency', 'Currency', 'required');
-//        $this->form_validation->set_rules('cclassification', 'Classification', 'required');
-//
-//        if ($this->form_validation->run($this) == TRUE)
-//        {            
-//            if ($this->input->post('cclassification') == 7 || $this->input->post('cclassification') == 8){ $bank = 1; }
-//            else { $bank  = $this->input->post('cbank'); }
-//            
-//            $account = array('classification_id' => $this->input->post('cclassification'), 'currency' => $this->input->post('ccurrency'),
-//                             'code' => $this->input->post('tcode').'-'.$this->input->post('tno'), 'name' => $this->input->post('tname'),
-//                             'alias' => $this->input->post('talias'), 'status' => $this->input->post('cactive'), 'bank_stts' => $bank,
-//                             'created' => date('Y-m-d H:i:s'));
-//            
-//            $this->Model->add($account);
-//            $this->create_balance($this->input->post('tno').'-'.$this->input->post('tcode'));
-//
-//            echo 'true|'.$this->title.' successfully saved..!';
-//        }
-//        else{ echo "error|".validation_errors(); }
-//        }else { echo "error|Sorry, you do not have the right to edit $this->title component..!"; }
-//
-//    }
     
     private function create_balance($member,$code=null)
     {
@@ -266,13 +234,19 @@ class Account extends MX_Controller
         
        try{
          $datax = (array)json_decode(file_get_contents('php://input'));  
-         $error = null;
-         $code = $this->classification->get_no($datax['classification']).'-'.$datax['no'];
+         $error = null; $errorfield = null;
          
-         if ($this->validation_code($code, $uid) == FALSE){ $error = 'This '.$this->title.' code is already registered!'; }
-         if ($this->validation_name($datax['name'], $uid) == FALSE){ $error = 'This '.$this->title.' is already registered!'; }
+         $errorfield = $this->valid_required($datax,'update');
          
-         if ($error == null){
+         if ($errorfield == null){
+            $code = $this->classification->get_no($datax['classification']).'-'.$datax['code'];
+            $uid = $datax['id'];
+         
+            if ($this->validation_code($code, $uid) == FALSE){ $error = 'This '.$this->title.' code is already registered!'; }
+            if ($this->validation_name($datax['name'], $uid) == FALSE){ $error = 'This '.$this->title.' is already registered!'; }    
+         }
+        
+         if ($errorfield == null && $error == null){
              
              if ($datax['classification'] == 7 || $datax['classification'] == 8){ $bank = 1; }else { $bank  = $datax['bank_status']; }
             
@@ -280,11 +254,12 @@ class Account extends MX_Controller
                               'code' => $code, 'name' => $datax['name'], 'alias' => $datax['alias'], 'acc_no' => $datax['acc_no'],
                               'bank' => $datax['bank'], 'city' => $datax['city'], 'phone' => $datax['phone'], 'zip' => $datax['zip'],
                               'contact' => $datax['contact'], 'fax' => $datax['fax'], 'balance_phone' => $datax['balance_phone'],
-                              'status' => $datax['status'], 'bank_stts' => $bank);
+                              'bank_stts' => $bank);
             
              $this->Model->update($datax['id'], $account);
              $this->api->response(array('status' => true, 'error' => $this->title.' successfully saved..!..!'));
-         }
+             
+         }else{ echo $errorfield.' - '.$error; }         
          
        }catch (\Exception $e){ return $this->api->response(null,403); }
         
@@ -346,7 +321,7 @@ class Account extends MX_Controller
 
     public function validation_code($code,$uid)
     {
-	if ($this->Model->validating('code',$code,$id) == FALSE)
+	if ($this->Model->validating('code',$code,$uid) == FALSE)
         {
 //            $this->form_validation->set_message('validation_code', 'This '.$this->title.' code is already registered!');
             return FALSE;

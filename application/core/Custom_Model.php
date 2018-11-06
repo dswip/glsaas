@@ -214,7 +214,7 @@ class Custom_Model extends CI_Model {
     
     function add($users)
     {
-        $this->db->insert($this->tableName, $users);
+        return $this->db->insert($this->tableName, $users);
 //        $this->logs->insert($this->session->userdata('userid'), date('Y-m-d'), waktuindo(), 'create', $this->com);
     }
     

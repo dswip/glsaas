@@ -66,6 +66,14 @@ class Account_lib extends Custom_Model {
         $val = $this->db->get($this->tableName)->row();
         if ($val){ return $val->name; }
     }
+    
+    function get_member($id=null)
+    {
+        $this->db->select('member_id');
+        $this->db->where('id', $id);
+        $val = $this->db->get($this->tableName)->row();
+        if ($val){ return $val->member_id; }
+    }
 	
     function get_cur($id=null)
     {
